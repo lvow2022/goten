@@ -30,6 +30,34 @@ if [ ! -d "include" ]; then
     echo "Warning: include directory not found, please ensure TEN VAD header files are properly installed"
 fi
 
+# Set environment variables for macOS
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    echo "Setting macOS environment variables..."
+    
+    # Get current paths
+    CURRENT_FRAMEWORK_PATH="$DYLD_FRAMEWORK_PATH"
+    CURRENT_LIBRARY_PATH="$DYLD_LIBRARY_PATH"
+    
+    # Set framework path (usually only one path needed)
+    export DYLD_FRAMEWORK_PATH="$(pwd)/lib/macOS"
+    
+    # Set library path (append to existing if any)
+    if [ -n "$CURRENT_LIBRARY_PATH" ]; then
+        export DYLD_LIBRARY_PATH="$CURRENT_LIBRARY_PATH:$(pwd)/lib/macOS"
+    else
+        export DYLD_LIBRARY_PATH="$(pwd)/lib/macOS"
+    fi
+    
+    export CGO_CFLAGS="-I$(pwd)/include"
+    export CGO_LDFLAGS="-F$(pwd)/lib/macOS -framework ten_vad -Wl,-rpath,$(pwd)/lib/macOS"
+    
+    echo "Environment variables set:"
+    echo "DYLD_FRAMEWORK_PATH: $DYLD_FRAMEWORK_PATH"
+    echo "DYLD_LIBRARY_PATH: $DYLD_LIBRARY_PATH"
+    echo "CGO_CFLAGS: $CGO_CFLAGS"
+    echo "CGO_LDFLAGS: $CGO_LDFLAGS"
+fi
+
 # Clean previous builds
 echo "Cleaning previous builds..."
 rm -rf build/
