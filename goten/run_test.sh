@@ -2,20 +2,20 @@
 
 set -e
 
-echo "=== 编译 Go 测试二进制 ==="
+echo "=== Compiling Go test binary ==="
 go test -c -o goten.test
 
-# 检测平台
+# Detect platform
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    echo "=== 检测到macOS，patch rpath 到 ten_vad.framework ==="
-    # 获取当前脚本所在目录的绝对路径
+    echo "=== Detected macOS, patching rpath to ten_vad.framework ==="
+    # Get absolute path of current script directory
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    # 计算lib目录的绝对路径
+    # Calculate absolute path of lib directory
     LIB_PATH="$SCRIPT_DIR/../lib/macOS"
-    install_name_tool -add_rpath "$LIB_PATH" ./goten.test 2>/dev/null || echo "rpath已存在"
+    install_name_tool -add_rpath "$LIB_PATH" ./goten.test 2>/dev/null || echo "rpath already exists"
 else
-    echo "=== 检测到Linux/Windows，直接运行测试 ==="
+    echo "=== Detected Linux/Windows, running tests directly ==="
 fi
 
-echo "=== 运行测试 ==="
+echo "=== Running tests ==="
 ./goten.test -test.v

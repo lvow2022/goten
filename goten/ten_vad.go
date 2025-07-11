@@ -19,20 +19,20 @@ import (
 	"unsafe"
 )
 
-// VADHandle 表示TEN VAD实例的句柄
+// VADHandle represents the handle of a TEN VAD instance
 type VADHandle struct {
 	handle C.ten_vad_handle_t
 }
 
-// VADResult 表示VAD处理结果
+// VADResult represents VAD processing result
 type VADResult struct {
-	Probability float32 // 语音活动概率 [0.0, 1.0]
-	Flag        int     // 二进制语音活动决策: 0=无语音, 1=检测到语音
+	Probability float32 // Speech activity probability [0.0, 1.0]
+	Flag        int     // Binary speech activity decision: 0=no speech, 1=speech detected
 }
 
-// CreateVAD 创建并初始化TEN VAD实例
-// hopSize: 两个连续分析帧起始点之间的样本数 (例如: 256)
-// threshold: VAD检测阈值，范围[0.0, 1.0]，用于与输出概率比较确定语音活动
+// CreateVAD creates and initializes a TEN VAD instance
+// hopSize: number of samples between start points of two consecutive analysis frames (e.g.: 256)
+// threshold: VAD detection threshold, range [0.0, 1.0], used to compare with output probability to determine speech activity
 func CreateVAD(hopSize int, threshold float32) (*VADHandle, error) {
 	var handle C.ten_vad_handle_t
 
@@ -44,8 +44,8 @@ func CreateVAD(hopSize int, threshold float32) (*VADHandle, error) {
 	return &VADHandle{handle: handle}, nil
 }
 
-// Process 处理一帧音频进行语音活动检测
-// audioData: int16_t样本数组，缓冲区长度必须等于CreateVAD时指定的hopSize
+// Process processes one frame of audio for speech activity detection
+// audioData: int16_t sample array, buffer length must equal the hopSize specified in CreateVAD
 func (v *VADHandle) Process(audioData []int16) (*VADResult, error) {
 	if len(audioData) == 0 {
 		return nil, fmt.Errorf("audio data cannot be empty")
@@ -72,7 +72,7 @@ func (v *VADHandle) Process(audioData []int16) (*VADResult, error) {
 	}, nil
 }
 
-// Destroy 销毁TEN VAD实例并释放资源
+// Destroy destroys the TEN VAD instance and releases resources
 func (v *VADHandle) Destroy() error {
 	result := C.ten_vad_destroy(&v.handle)
 	if result != 0 {
@@ -81,12 +81,12 @@ func (v *VADHandle) Destroy() error {
 	return nil
 }
 
-// GetVersion 获取TEN VAD库版本字符串
+// GetVersion gets the TEN VAD library version string
 func GetVersion() string {
 	return C.GoString(C.ten_vad_get_version())
 }
 
-// Close 关闭VAD句柄的便捷方法
+// Close is a convenient method to close the VAD handle
 func (v *VADHandle) Close() error {
 	return v.Destroy()
 }

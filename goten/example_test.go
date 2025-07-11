@@ -9,26 +9,26 @@ import (
 )
 
 func TestVADBasicUsage(t *testing.T) {
-	// 打印版本信息
+	// Print version information
 	fmt.Printf("TEN VAD Version: %s\n", GetVersion())
 
-	// 创建VAD实例
+	// Create VAD instance
 	// hopSize: 256 samples (16ms at 16kHz)
-	// threshold: 0.5 (默认阈值)
+	// threshold: 0.5 (default threshold)
 	vad, err := CreateVAD(256, 0.5)
 	if err != nil {
 		t.Fatalf("Failed to create VAD: %v", err)
 	}
 	defer vad.Close()
 
-	// 模拟音频数据 (256个int16样本)
-	// 这里使用随机数据作为示例
+	// Simulate audio data (256 int16 samples)
+	// Using random data as example
 	audioData := make([]int16, 256)
 	for i := range audioData {
-		audioData[i] = int16(i % 1000) // 简单的测试数据
+		audioData[i] = int16(i % 1000) // Simple test data
 	}
 
-	// 处理音频帧
+	// Process audio frame
 	result, err := vad.Process(audioData)
 	if err != nil {
 		t.Fatalf("Failed to process audio: %v", err)
@@ -37,7 +37,7 @@ func TestVADBasicUsage(t *testing.T) {
 	fmt.Printf("VAD Result - Probability: %.6f, Flag: %d\n",
 		result.Probability, result.Flag)
 
-	// 验证结果
+	// Verify results
 	if result.Probability < 0.0 || result.Probability > 1.0 {
 		t.Errorf("Probability out of range [0,1]: %f", result.Probability)
 	}
@@ -54,11 +54,11 @@ func TestVADMultipleFrames(t *testing.T) {
 	}
 	defer vad.Close()
 
-	// 处理多个音频帧
+	// Process multiple audio frames
 	for frame := 0; frame < 5; frame++ {
 		audioData := make([]int16, 256)
 		for i := range audioData {
-			// 模拟不同的音频模式
+			// Simulate different audio patterns
 			audioData[i] = int16((frame*100 + i) % 2000)
 		}
 
@@ -73,7 +73,7 @@ func TestVADMultipleFrames(t *testing.T) {
 }
 
 func TestVADErrorHandling(t *testing.T) {
-	// 测试空音频数据
+	// Test empty audio data
 	vad, err := CreateVAD(256, 0.5)
 	if err != nil {
 		t.Fatalf("Failed to create VAD: %v", err)
@@ -85,25 +85,25 @@ func TestVADErrorHandling(t *testing.T) {
 		t.Error("Expected error for empty audio data")
 	}
 
-	// 注意：C库对无效参数的处理可能直接报错而不是返回错误代码
-	// 这些测试可能在某些情况下会失败，这是正常的
+	// Note: C library may handle invalid parameters differently
+	// These tests may fail in some cases, which is normal
 	t.Log("Note: C library may handle invalid parameters differently")
 }
 
 func TestPCMFileProcessing(t *testing.T) {
-	// 创建测试PCM文件
+	// Create test PCM file
 	testPCMFile := "test_pcm.pcm"
 	defer os.Remove(testPCMFile)
 
-	// 生成测试音频数据（1秒的16kHz音频）
+	// Generate test audio data (1 second of 16kHz audio)
 	sampleRate := 16000
-	duration := 1 // 秒
+	duration := 1 // seconds
 	numSamples := sampleRate * duration
 
-	// 创建简单的正弦波音频数据
+	// Create simple sine wave audio data
 	audioData := make([]int16, numSamples)
 	for i := 0; i < numSamples; i++ {
-		// 生成440Hz的正弦波
+		// Generate 440Hz sine wave
 		frequency := 440.0
 		amplitude := 0.3
 		sample := amplitude * float64(int16(32767)) *
@@ -111,22 +111,22 @@ func TestPCMFileProcessing(t *testing.T) {
 		audioData[i] = int16(sample)
 	}
 
-	// 写入PCM文件（小端字节序）
+	// Write PCM file (little-endian byte order)
 	file, err := os.Create(testPCMFile)
 	if err != nil {
-		t.Fatalf("创建测试PCM文件失败: %v", err)
+		t.Fatalf("Failed to create test PCM file: %v", err)
 	}
 	defer file.Close()
 
-	// 写入音频数据
+	// Write audio data
 	for _, sample := range audioData {
 		err := binary.Write(file, binary.LittleEndian, sample)
 		if err != nil {
-			t.Fatalf("写入PCM数据失败: %v", err)
+			t.Fatalf("Failed to write PCM data: %v", err)
 		}
 	}
 
-	// 配置PCM参数
+	// Configure PCM parameters
 	config := PCMConfig{
 		SampleRate:    16000,
 		NumChannels:   1,
@@ -134,68 +134,68 @@ func TestPCMFileProcessing(t *testing.T) {
 		ByteOrder:     binary.LittleEndian,
 	}
 
-	// 测试PCM文件读取
+	// Test PCM file reading
 	readData, err := ReadPCMFile(testPCMFile, config)
 	if err != nil {
-		t.Fatalf("读取PCM文件失败: %v", err)
+		t.Fatalf("Failed to read PCM file: %v", err)
 	}
 
 	if len(readData) != len(audioData) {
-		t.Fatalf("读取的音频数据长度不匹配: 期望 %d, 实际 %d", len(audioData), len(readData))
+		t.Fatalf("Read audio data length mismatch: expected %d, got %d", len(audioData), len(readData))
 	}
 
-	// 测试PCM文件处理
+	// Test PCM file processing
 	hopSize := 256
 	threshold := float32(0.5)
 	results, err := ProcessPCMFile(testPCMFile, config, hopSize, threshold)
 	if err != nil {
-		t.Fatalf("处理PCM文件失败: %v", err)
+		t.Fatalf("Failed to process PCM file: %v", err)
 	}
 
 	expectedFrames := len(audioData) / hopSize
 	if len(results) != expectedFrames {
-		t.Fatalf("处理结果帧数不匹配: 期望 %d, 实际 %d", expectedFrames, len(results))
+		t.Fatalf("Processing result frame count mismatch: expected %d, got %d", expectedFrames, len(results))
 	}
 
-	// 检查结果
+	// Check results
 	speechFrames := 0
 	for _, result := range results {
 		if result.Flag == 1 {
 			speechFrames++
 		}
 		if result.Probability < 0.0 || result.Probability > 1.0 {
-			t.Fatalf("概率值超出范围 [0,1]: %f", result.Probability)
+			t.Fatalf("Probability value out of range [0,1]: %f", result.Probability)
 		}
 	}
 
-	fmt.Printf("PCM文件处理测试通过: 总帧数=%d, 语音帧数=%d\n", len(results), speechFrames)
+	fmt.Printf("PCM file processing test passed: total frames=%d, speech frames=%d\n", len(results), speechFrames)
 }
 
 func TestFileTypeDetection(t *testing.T) {
-	// 测试WAV文件检测
+	// Test WAV file detection
 	wavFile := "../testset/testset-audio-01.wav"
 	if _, err := os.Stat(wavFile); err == nil {
 		fileType, err := DetectFileType(wavFile)
 		if err != nil {
-			t.Fatalf("检测WAV文件类型失败: %v", err)
+			t.Fatalf("Failed to detect WAV file type: %v", err)
 		}
 		if fileType != "wav" {
-			t.Fatalf("WAV文件类型检测错误: 期望 'wav', 实际 '%s'", fileType)
+			t.Fatalf("WAV file type detection error: expected 'wav', got '%s'", fileType)
 		}
 	}
 
-	// 测试PCM文件检测
+	// Test PCM file detection
 	testPCMFile := "test_detect.pcm"
 	defer os.Remove(testPCMFile)
 
-	// 创建简单的PCM文件（至少12字节）
+	// Create simple PCM file (at least 12 bytes)
 	file, err := os.Create(testPCMFile)
 	if err != nil {
-		t.Fatalf("创建测试PCM文件失败: %v", err)
+		t.Fatalf("Failed to create test PCM file: %v", err)
 	}
 	defer file.Close()
 
-	// 写入一些测试数据（至少6个int16样本 = 12字节）
+	// Write some test data (at least 6 int16 samples = 12 bytes)
 	testData := []int16{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 	for _, sample := range testData {
 		binary.Write(file, binary.LittleEndian, sample)
@@ -203,11 +203,11 @@ func TestFileTypeDetection(t *testing.T) {
 
 	fileType, err := DetectFileType(testPCMFile)
 	if err != nil {
-		t.Fatalf("检测PCM文件类型失败: %v", err)
+		t.Fatalf("Failed to detect PCM file type: %v", err)
 	}
 	if fileType != "pcm" {
-		t.Fatalf("PCM文件类型检测错误: 期望 'pcm', 实际 '%s'", fileType)
+		t.Fatalf("PCM file type detection error: expected 'pcm', got '%s'", fileType)
 	}
 
-	fmt.Println("文件类型检测测试通过")
+	fmt.Println("File type detection test passed")
 }

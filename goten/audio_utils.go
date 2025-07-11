@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-// WAVHeader 表示WAV文件头信息
+// WAVHeader represents WAV file header information
 type WAVHeader struct {
 	SampleRate    uint32
 	NumChannels   uint16
@@ -16,7 +16,7 @@ type WAVHeader struct {
 	DataOffset    int64
 }
 
-// ReadWAVFile 读取WAV文件并返回音频数据和头信息
+// ReadWAVFile reads WAV file and returns audio data and header information
 func ReadWAVFile(filename string) ([]int16, *WAVHeader, error) {
 	file, err := os.Open(filename)
 	if err != nil {
@@ -24,13 +24,13 @@ func ReadWAVFile(filename string) ([]int16, *WAVHeader, error) {
 	}
 	defer file.Close()
 
-	// 读取RIFF头
+	// Read RIFF header
 	var riffHeader [12]byte
 	if _, err := io.ReadFull(file, riffHeader[:]); err != nil {
 		return nil, nil, fmt.Errorf("failed to read RIFF header: %v", err)
 	}
 
-	// 检查RIFF标识
+	// Check RIFF identifier
 	if string(riffHeader[:4]) != "RIFF" {
 		return nil, nil, fmt.Errorf("not a valid WAV file (RIFF)")
 	}
@@ -42,7 +42,7 @@ func ReadWAVFile(filename string) ([]int16, *WAVHeader, error) {
 	header := &WAVHeader{}
 	var dataOffset int64 = 12
 
-	// 读取子块
+	// Read sub-chunks
 	for {
 		var chunkHeader [8]byte
 		if _, err := io.ReadFull(file, chunkHeader[:]); err != nil {
@@ -54,7 +54,7 @@ func ReadWAVFile(filename string) ([]int16, *WAVHeader, error) {
 
 		switch chunkID {
 		case "fmt ":
-			// 读取格式信息
+			// Read format information
 			var fmtData [16]byte
 			if _, err := io.ReadFull(file, fmtData[:]); err != nil {
 				return nil, nil, fmt.Errorf("failed to read format data: %v", err)
@@ -64,7 +64,7 @@ func ReadWAVFile(filename string) ([]int16, *WAVHeader, error) {
 			header.SampleRate = binary.LittleEndian.Uint32(fmtData[4:8])
 			header.BitsPerSample = binary.LittleEndian.Uint16(fmtData[14:16])
 
-			// 跳过剩余数据
+			// Skip remaining data
 			if chunkSize > 16 {
 				remaining := chunkSize - 16
 				if _, err := file.Seek(int64(remaining), io.SeekCurrent); err != nil {
@@ -73,13 +73,13 @@ func ReadWAVFile(filename string) ([]int16, *WAVHeader, error) {
 			}
 
 		case "data":
-			// 找到数据块
+			// Found data chunk
 			header.DataSize = chunkSize
 			header.DataOffset = dataOffset + 8
 			goto readData
 
 		default:
-			// 跳过未知块
+			// Skip unknown chunks
 			if _, err := file.Seek(int64(chunkSize), io.SeekCurrent); err != nil {
 				return nil, nil, fmt.Errorf("failed to skip chunk: %v", err)
 			}
@@ -90,7 +90,7 @@ func ReadWAVFile(filename string) ([]int16, *WAVHeader, error) {
 
 readData:
 
-	// 检查音频格式
+	// Check audio format
 	if header.NumChannels != 1 {
 		return nil, nil, fmt.Errorf("only mono audio is supported, got %d channels", header.NumChannels)
 	}
@@ -103,13 +103,13 @@ readData:
 		return nil, nil, fmt.Errorf("only 16kHz audio is supported, got %d Hz", header.SampleRate)
 	}
 
-	// 读取音频数据
+	// Read audio data
 	audioBytes := make([]byte, header.DataSize)
 	if _, err := io.ReadFull(file, audioBytes); err != nil {
 		return nil, nil, fmt.Errorf("failed to read audio data: %v", err)
 	}
 
-	// 将字节转换为int16
+	// Convert bytes to int16
 	audioData := make([]int16, header.DataSize/2)
 	for i := 0; i < len(audioBytes); i += 2 {
 		audioData[i/2] = int16(binary.LittleEndian.Uint16(audioBytes[i : i+2]))
@@ -118,26 +118,24 @@ readData:
 	return audioData, header, nil
 }
 
-// ProcessWAVFile 处理WAV文件并返回VAD结果
+// ProcessWAVFile processes WAV file and returns VAD results
 func ProcessWAVFile(filename string, hopSize int, threshold float32) ([]*VADResult, error) {
-	// 读取WAV文件
+	// Read WAV file
 	audioData, _, err := ReadWAVFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read WAV file: %v", err)
 	}
 
-	// 创建VAD实例
+	// Create VAD instance
 	vad, err := CreateVAD(hopSize, threshold)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create VAD: %v", err)
 	}
 	defer vad.Close()
 
-	// 计算帧数
 	frameCount := len(audioData) / hopSize
 	results := make([]*VADResult, frameCount)
 
-	// 处理每一帧
 	for i := 0; i < frameCount; i++ {
 		start := i * hopSize
 		end := start + hopSize
@@ -147,7 +145,7 @@ func ProcessWAVFile(filename string, hopSize int, threshold float32) ([]*VADResu
 
 		frame := audioData[start:end]
 
-		// 如果最后一帧不足hopSize，用零填充
+		// If the last frame is smaller than hopSize, pad with zeros
 		if len(frame) < hopSize {
 			paddedFrame := make([]int16, hopSize)
 			copy(paddedFrame, frame)
@@ -165,11 +163,11 @@ func ProcessWAVFile(filename string, hopSize int, threshold float32) ([]*VADResu
 	return results, nil
 }
 
-// ConvertFloat32ToInt16 将float32音频数据转换为int16
+// ConvertFloat32ToInt16 converts float32 audio data to int16
 func ConvertFloat32ToInt16(floatData []float32) []int16 {
 	int16Data := make([]int16, len(floatData))
 	for i, sample := range floatData {
-		// 将float32 [-1.0, 1.0] 转换为int16 [-32768, 32767]
+		// Convert float32 [-1.0, 1.0] to int16 [-32768, 32767]
 		if sample > 1.0 {
 			sample = 1.0
 		} else if sample < -1.0 {
@@ -180,17 +178,17 @@ func ConvertFloat32ToInt16(floatData []float32) []int16 {
 	return int16Data
 }
 
-// ConvertInt16ToFloat32 将int16音频数据转换为float32
+// ConvertInt16ToFloat32 converts int16 audio data to float32
 func ConvertInt16ToFloat32(int16Data []int16) []float32 {
 	floatData := make([]float32, len(int16Data))
 	for i, sample := range int16Data {
-		// 将int16 [-32768, 32767] 转换为float32 [-1.0, 1.0]
+		// Convert int16 [-32768, 32767] to float32 [-1.0, 1.0]
 		floatData[i] = float32(sample) / 32767.0
 	}
 	return floatData
 }
 
-// PCMConfig 表示PCM文件的配置信息
+// PCMConfig represents PCM file configuration information
 type PCMConfig struct {
 	SampleRate    uint32
 	NumChannels   uint16
@@ -198,7 +196,7 @@ type PCMConfig struct {
 	ByteOrder     binary.ByteOrder
 }
 
-// ReadPCMFile 读取PCM文件并返回音频数据
+// ReadPCMFile reads PCM file and returns audio data
 func ReadPCMFile(filename string, config PCMConfig) ([]int16, error) {
 	file, err := os.Open(filename)
 	if err != nil {
@@ -206,7 +204,7 @@ func ReadPCMFile(filename string, config PCMConfig) ([]int16, error) {
 	}
 	defer file.Close()
 
-	// 检查音频格式
+	// Check audio format
 	if config.NumChannels != 1 {
 		return nil, fmt.Errorf("only mono audio is supported, got %d channels", config.NumChannels)
 	}
@@ -219,18 +217,17 @@ func ReadPCMFile(filename string, config PCMConfig) ([]int16, error) {
 		return nil, fmt.Errorf("only 16kHz audio is supported, got %d Hz", config.SampleRate)
 	}
 
-	// 读取所有音频数据
 	audioBytes, err := io.ReadAll(file)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read audio data: %v", err)
 	}
 
-	// 检查数据长度是否为偶数（16位 = 2字节）
+	// Check if data length is even (16-bit = 2 bytes)
 	if len(audioBytes)%2 != 0 {
 		return nil, fmt.Errorf("invalid PCM data length: %d bytes (must be even)", len(audioBytes))
 	}
 
-	// 将字节转换为int16
+	// Convert bytes to int16
 	audioData := make([]int16, len(audioBytes)/2)
 	for i := 0; i < len(audioBytes); i += 2 {
 		audioData[i/2] = int16(config.ByteOrder.Uint16(audioBytes[i : i+2]))
@@ -239,26 +236,24 @@ func ReadPCMFile(filename string, config PCMConfig) ([]int16, error) {
 	return audioData, nil
 }
 
-// ProcessPCMFile 处理PCM文件并返回VAD结果
+// ProcessPCMFile processes PCM file and returns VAD results
 func ProcessPCMFile(filename string, config PCMConfig, hopSize int, threshold float32) ([]*VADResult, error) {
-	// 读取PCM文件
+	// Read PCM file
 	audioData, err := ReadPCMFile(filename, config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read PCM file: %v", err)
 	}
 
-	// 创建VAD实例
+	// Create VAD instance
 	vad, err := CreateVAD(hopSize, threshold)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create VAD: %v", err)
 	}
 	defer vad.Close()
 
-	// 计算帧数
 	frameCount := len(audioData) / hopSize
 	results := make([]*VADResult, frameCount)
 
-	// 处理每一帧
 	for i := 0; i < frameCount; i++ {
 		start := i * hopSize
 		end := start + hopSize
@@ -268,7 +263,7 @@ func ProcessPCMFile(filename string, config PCMConfig, hopSize int, threshold fl
 
 		frame := audioData[start:end]
 
-		// 如果最后一帧不足hopSize，用零填充
+		// If the last frame is smaller than hopSize, pad with zeros
 		if len(frame) < hopSize {
 			paddedFrame := make([]int16, hopSize)
 			copy(paddedFrame, frame)
@@ -286,7 +281,7 @@ func ProcessPCMFile(filename string, config PCMConfig, hopSize int, threshold fl
 	return results, nil
 }
 
-// DetectFileType 检测文件类型（WAV或PCM）
+// DetectFileType detects file type (WAV or PCM)
 func DetectFileType(filename string) (string, error) {
 	file, err := os.Open(filename)
 	if err != nil {
@@ -294,28 +289,27 @@ func DetectFileType(filename string) (string, error) {
 	}
 	defer file.Close()
 
-	// 获取文件大小
 	fileInfo, err := file.Stat()
 	if err != nil {
 		return "", fmt.Errorf("failed to get file info: %v", err)
 	}
 
-	// 如果文件太小，无法确定类型，默认为PCM
+	// If file is too small to determine type, default to PCM
 	if fileInfo.Size() < 12 {
 		return "pcm", nil
 	}
 
-	// 读取前12字节
+	// Read first 12 bytes
 	header := make([]byte, 12)
 	if _, err := io.ReadFull(file, header); err != nil {
 		return "", fmt.Errorf("failed to read file header: %v", err)
 	}
 
-	// 检查是否为WAV文件
+	// Check if it's a WAV file
 	if string(header[:4]) == "RIFF" && string(header[8:12]) == "WAVE" {
 		return "wav", nil
 	}
 
-	// 默认为PCM文件
+	// Default to PCM file
 	return "pcm", nil
 }

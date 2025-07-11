@@ -1,72 +1,72 @@
 #!/bin/bash
 
-# TEN VAD Go 封装构建脚本
+# TEN VAD Go wrapper build script
 
 set -e
 
-echo "=== TEN VAD Go 封装构建脚本 ==="
+echo "=== TEN VAD Go wrapper build script ==="
 
-# 检查Go是否安装
+# Check if Go is installed
 if ! command -v go &> /dev/null; then
-    echo "错误: 未找到Go编译器，请先安装Go"
+    echo "Error: Go compiler not found, please install Go first"
     exit 1
 fi
 
-echo "Go版本: $(go version)"
+echo "Go version: $(go version)"
 
-# 检查是否在正确的目录
+# Check if we're in the correct directory
 if [ ! -f "go.mod" ]; then
-    echo "错误: 请在vad目录下运行此脚本"
+    echo "Error: Please run this script in the vad directory"
     exit 1
 fi
 
-# 检查TEN VAD库文件是否存在
-echo "检查TEN VAD库文件..."
+# Check if TEN VAD library files exist
+echo "Checking TEN VAD library files..."
 if [ ! -d "../lib" ]; then
-    echo "警告: 未找到../lib目录，请确保TEN VAD库文件已正确安装"
+    echo "Warning: ../lib directory not found, please ensure TEN VAD library files are properly installed"
 fi
 
-# 清理之前的构建
-echo "清理之前的构建..."
+# Clean previous builds
+echo "Cleaning previous builds..."
 rm -rf build/
 rm -f vad.test
 mkdir -p build/
 
-# 注意：运行测试请使用 ./run_test.sh
-echo "开始构建..."
+# Note: Run tests using ./run_test.sh
+echo "Starting build..."
 
-# 构建命令行工具
-echo "构建命令行工具..."
+# Build command line tool
+echo "Building command line tool..."
 go build -o build/vad_demo cmd/main.go
 
-# macOS平台需要patch rpath
+# macOS platform needs rpath patch
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    echo "macOS平台，patch rpath..."
-    # 获取当前脚本所在目录的绝对路径
+    echo "macOS platform, patching rpath..."
+    # Get absolute path of current script directory
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    # 计算lib目录的绝对路径
+    # Calculate absolute path of lib directory
     LIB_PATH="$SCRIPT_DIR/../lib/macOS"
-    install_name_tool -add_rpath "$LIB_PATH" build/vad_demo 2>/dev/null || echo "vad_demo rpath已存在"
+    install_name_tool -add_rpath "$LIB_PATH" build/vad_demo 2>/dev/null || echo "vad_demo rpath already exists"
 fi
 
-# 构建库（可选）
-# echo "构建库..."
+# Build library (optional)
+# echo "Building library..."
 # go build -buildmode=c-shared -o build/libten_vad_go.so .
 
-echo "=== 构建完成 ==="
-echo "可执行文件: build/vad_demo"
+echo "=== Build completed ==="
+echo "Executable: build/vad_demo"
 
-# 显示使用说明
+# Show usage instructions
 echo ""
-echo "=== 使用说明 ==="
-echo "运行命令行工具:"
-echo "  ./build/vad_demo -input <WAV文件> -output <结果文件>"
+echo "=== Usage Instructions ==="
+echo "Run command line tool:"
+echo "  ./build/vad_demo -input <WAV file> -output <result file>"
 echo ""
-echo "查看帮助:"
+echo "View help:"
 echo "  ./build/vad_demo -help"
 echo ""
-echo "显示版本:"
+echo "Show version:"
 echo "  ./build/vad_demo -version"
 echo ""
-echo "测试testset音频文件:"
+echo "Test testset audio file:"
 echo "  ./build/vad_demo -input ../testset/testset-audio-01.wav -output test_result.txt" 
