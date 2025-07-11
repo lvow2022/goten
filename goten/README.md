@@ -161,16 +161,16 @@ go test -c -o goten.test
 
 ```bash
 # 显示帮助
-./build/ten_vad_demo -help
+./build/vad_demo -help
 
 # 处理WAV文件
-./build/ten_vad_demo -input ../testset/testset-audio-01.wav -output result.txt
+./build/vad_demo -input ../testset/testset-audio-01.wav -output result.txt
 
 # 处理PCM文件（默认采样率=16000Hz, 单声道, 16位, 小端）
-./build/ten_vad_demo -input input.pcm -output result.txt
+./build/vad_demo -input input.pcm -output result.txt
 
 # 显示版本
-./build/ten_vad_demo -version
+./build/vad_demo -version
 ```
 
 ### 命令行参数
