@@ -26,6 +26,10 @@ if [ ! -d "lib" ]; then
     echo "Warning: lib directory not found, please ensure TEN VAD library files are properly installed"
 fi
 
+if [ ! -d "include" ]; then
+    echo "Warning: include directory not found, please ensure TEN VAD header files are properly installed"
+fi
+
 # Clean previous builds
 echo "Cleaning previous builds..."
 rm -rf build/
@@ -37,7 +41,7 @@ echo "Starting build..."
 
 # Build command line tool
 echo "Building command line tool..."
-go build -o build/vad_demo main.go
+go build -o build/vad_demo cmd/vad_demo.go
 
 # macOS platform needs rpath patch
 if [[ "$OSTYPE" == "darwin"* ]]; then

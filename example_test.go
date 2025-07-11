@@ -6,20 +6,22 @@ import (
 	"math"
 	"os"
 	"testing"
+
+	"github.com/lvow2022/goten/vad"
 )
 
 func TestVADBasicUsage(t *testing.T) {
 	// Print version information
-	fmt.Printf("TEN VAD Version: %s\n", GetVersion())
+	fmt.Printf("TEN VAD Version: %s\n", vad.GetVersion())
 
 	// Create VAD instance
 	// hopSize: 256 samples (16ms at 16kHz)
 	// threshold: 0.5 (default threshold)
-	vad, err := CreateVAD(256, 0.5)
+	vadInstance, err := vad.New(256, 0.5)
 	if err != nil {
 		t.Fatalf("Failed to create VAD: %v", err)
 	}
-	defer vad.Close()
+	defer vadInstance.Close()
 
 	// Simulate audio data (256 int16 samples)
 	// Using random data as example
@@ -29,7 +31,7 @@ func TestVADBasicUsage(t *testing.T) {
 	}
 
 	// Process audio frame
-	result, err := vad.Process(audioData)
+	result, err := vadInstance.Process(audioData)
 	if err != nil {
 		t.Fatalf("Failed to process audio: %v", err)
 	}
@@ -48,11 +50,11 @@ func TestVADBasicUsage(t *testing.T) {
 }
 
 func TestVADMultipleFrames(t *testing.T) {
-	vad, err := CreateVAD(256, 0.5)
+	vadInstance, err := vad.New(256, 0.5)
 	if err != nil {
 		t.Fatalf("Failed to create VAD: %v", err)
 	}
-	defer vad.Close()
+	defer vadInstance.Close()
 
 	// Process multiple audio frames
 	for frame := 0; frame < 5; frame++ {
@@ -62,7 +64,7 @@ func TestVADMultipleFrames(t *testing.T) {
 			audioData[i] = int16((frame*100 + i) % 2000)
 		}
 
-		result, err := vad.Process(audioData)
+		result, err := vadInstance.Process(audioData)
 		if err != nil {
 			t.Fatalf("Failed to process frame %d: %v", frame, err)
 		}
@@ -74,13 +76,13 @@ func TestVADMultipleFrames(t *testing.T) {
 
 func TestVADErrorHandling(t *testing.T) {
 	// Test empty audio data
-	vad, err := CreateVAD(256, 0.5)
+	vadInstance, err := vad.New(256, 0.5)
 	if err != nil {
 		t.Fatalf("Failed to create VAD: %v", err)
 	}
-	defer vad.Close()
+	defer vadInstance.Close()
 
-	_, err = vad.Process([]int16{})
+	_, err = vadInstance.Process([]int16{})
 	if err == nil {
 		t.Error("Expected error for empty audio data")
 	}
@@ -127,7 +129,7 @@ func TestPCMFileProcessing(t *testing.T) {
 	}
 
 	// Configure PCM parameters
-	config := PCMConfig{
+	config := vad.PCMConfig{
 		SampleRate:    16000,
 		NumChannels:   1,
 		BitsPerSample: 16,
@@ -135,7 +137,7 @@ func TestPCMFileProcessing(t *testing.T) {
 	}
 
 	// Test PCM file reading
-	readData, err := ReadPCMFile(testPCMFile, config)
+	readData, err := vad.ReadPCMFile(testPCMFile, config)
 	if err != nil {
 		t.Fatalf("Failed to read PCM file: %v", err)
 	}
@@ -147,7 +149,7 @@ func TestPCMFileProcessing(t *testing.T) {
 	// Test PCM file processing
 	hopSize := 256
 	threshold := float32(0.5)
-	results, err := ProcessPCMFile(testPCMFile, config, hopSize, threshold)
+	results, err := vad.ProcessPCMFrames(testPCMFile, config, hopSize, threshold)
 	if err != nil {
 		t.Fatalf("Failed to process PCM file: %v", err)
 	}
@@ -175,7 +177,7 @@ func TestFileTypeDetection(t *testing.T) {
 	// Test WAV file detection
 	wavFile := "testset/testset-audio-01.wav"
 	if _, err := os.Stat(wavFile); err == nil {
-		fileType, err := DetectFileType(wavFile)
+		fileType, err := detectFileType(wavFile)
 		if err != nil {
 			t.Fatalf("Failed to detect WAV file type: %v", err)
 		}
@@ -201,7 +203,7 @@ func TestFileTypeDetection(t *testing.T) {
 		binary.Write(file, binary.LittleEndian, sample)
 	}
 
-	fileType, err := DetectFileType(testPCMFile)
+	fileType, err := detectFileType(testPCMFile)
 	if err != nil {
 		t.Fatalf("Failed to detect PCM file type: %v", err)
 	}
@@ -210,4 +212,26 @@ func TestFileTypeDetection(t *testing.T) {
 	}
 
 	fmt.Println("File type detection test passed")
+}
+
+// detectFileType detects if the file is WAV or PCM
+func detectFileType(filename string) (string, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	var header [12]byte
+	if _, err := file.Read(header[:]); err != nil {
+		return "", err
+	}
+
+	// Check if it's a WAV file
+	if string(header[:4]) == "RIFF" && string(header[8:12]) == "WAVE" {
+		return "wav", nil
+	}
+
+	// Assume it's PCM if not WAV
+	return "pcm", nil
 }

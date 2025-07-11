@@ -1,13 +1,14 @@
 package main
 
 import (
+	"encoding/binary"
 	"flag"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 
-	"encoding/binary"
+	"github.com/lvow2022/goten/vad"
 )
 
 func main() {
@@ -21,7 +22,7 @@ func main() {
 	flag.Parse()
 
 	if *showVersion {
-		fmt.Printf("TEN VAD Version: %s\n", GetVersion())
+		fmt.Printf("TEN VAD Version: %s\n", vad.GetVersion())
 		return
 	}
 
@@ -51,28 +52,28 @@ func main() {
 	fmt.Printf("Threshold: %.2f\n", *threshold)
 	fmt.Printf("Output file: %s\n", *outputFile)
 
-	fileType, err := DetectFileType(*inputFile)
+	fileType, err := detectFileType(*inputFile)
 	if err != nil {
 		log.Fatalf("Failed to detect file type: %v", err)
 	}
 
-	var results []*VADResult
+	var results []*vad.Result
 
 	if fileType == "wav" {
 		fmt.Printf("Detected WAV file\n")
-		results, err = ProcessWAVFile(*inputFile, *hopSize, float32(*threshold))
+		results, err = vad.ProcessWAVFrames(*inputFile, *hopSize, float32(*threshold))
 		if err != nil {
 			log.Fatalf("Failed to process WAV file: %v", err)
 		}
 	} else {
 		fmt.Printf("Detected PCM file (sample rate=16000Hz, mono, 16-bit, little-endian)\n")
-		config := PCMConfig{
+		config := vad.PCMConfig{
 			SampleRate:    16000,
 			NumChannels:   1,
 			BitsPerSample: 16,
 			ByteOrder:     binary.LittleEndian,
 		}
-		results, err = ProcessPCMFile(*inputFile, config, *hopSize, float32(*threshold))
+		results, err = vad.ProcessPCMFrames(*inputFile, config, *hopSize, float32(*threshold))
 		if err != nil {
 			log.Fatalf("Failed to process PCM file: %v", err)
 		}
@@ -144,4 +145,26 @@ func main() {
 	}
 
 	fmt.Printf("Results saved to: %s\n", *outputFile)
+}
+
+// detectFileType detects if the file is WAV or PCM
+func detectFileType(filename string) (string, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	var header [12]byte
+	if _, err := file.Read(header[:]); err != nil {
+		return "", err
+	}
+
+	// Check if it's a WAV file
+	if string(header[:4]) == "RIFF" && string(header[8:12]) == "WAVE" {
+		return "wav", nil
+	}
+
+	// Assume it's PCM if not WAV
+	return "pcm", nil
 }
