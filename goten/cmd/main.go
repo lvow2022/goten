@@ -9,7 +9,7 @@ import (
 
 	"encoding/binary"
 
-	"github.com/ten-framework/ten-vad/goten"
+	"github.com/lvow2022/ten-vad/goten"
 )
 
 func main() {

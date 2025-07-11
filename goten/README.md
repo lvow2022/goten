@@ -36,13 +36,6 @@ cd ten-vad/goten
 ### 基本用法
 
 ```go
-package main
-
-import (
-    "fmt"
-    "log"
-    "github.com/ten-framework/ten-vad/goten"
-)
 
 func main() {
     // 创建VAD实例
