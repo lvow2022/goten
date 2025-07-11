@@ -1,4 +1,4 @@
-package goten
+package main
 
 /*
 #cgo CFLAGS: -I./include
@@ -78,6 +78,7 @@ func (v *VADHandle) Destroy() error {
 	if result != 0 {
 		return fmt.Errorf("failed to destroy TEN VAD instance")
 	}
+
 	return nil
 }
 

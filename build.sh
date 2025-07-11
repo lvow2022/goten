@@ -16,20 +16,20 @@ echo "Go version: $(go version)"
 
 # Check if we're in the correct directory
 if [ ! -f "go.mod" ]; then
-    echo "Error: Please run this script in the vad directory"
+    echo "Error: Please run this script in the ten-vad directory"
     exit 1
 fi
 
 # Check if TEN VAD library files exist
 echo "Checking TEN VAD library files..."
-if [ ! -d "../lib" ]; then
-    echo "Warning: ../lib directory not found, please ensure TEN VAD library files are properly installed"
+if [ ! -d "lib" ]; then
+    echo "Warning: lib directory not found, please ensure TEN VAD library files are properly installed"
 fi
 
 # Clean previous builds
 echo "Cleaning previous builds..."
 rm -rf build/
-rm -f vad.test
+rm -f ten_vad.test
 mkdir -p build/
 
 # Note: Run tests using ./run_test.sh
@@ -37,7 +37,7 @@ echo "Starting build..."
 
 # Build command line tool
 echo "Building command line tool..."
-go build -o build/vad_demo cmd/main.go
+go build -o build/vad_demo main.go
 
 # macOS platform needs rpath patch
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -45,7 +45,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     # Get absolute path of current script directory
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     # Calculate absolute path of lib directory
-    LIB_PATH="$SCRIPT_DIR/../lib/macOS"
+    LIB_PATH="$SCRIPT_DIR/lib/macOS"
     install_name_tool -add_rpath "$LIB_PATH" build/vad_demo 2>/dev/null || echo "vad_demo rpath already exists"
 fi
 
@@ -69,4 +69,4 @@ echo "Show version:"
 echo "  ./build/vad_demo -version"
 echo ""
 echo "Test testset audio file:"
-echo "  ./build/vad_demo -input ../testset/testset-audio-01.wav -output test_result.txt" 
+echo "  ./build/vad_demo -input testset/testset-audio-01.wav -output test_result.txt" 

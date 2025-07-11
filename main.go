@@ -8,8 +8,6 @@ import (
 	"path/filepath"
 
 	"encoding/binary"
-
-	"github.com/lvow2022/ten-vad/goten"
 )
 
 func main() {
@@ -23,7 +21,7 @@ func main() {
 	flag.Parse()
 
 	if *showVersion {
-		fmt.Printf("TEN VAD Version: %s\n", goten.GetVersion())
+		fmt.Printf("TEN VAD Version: %s\n", GetVersion())
 		return
 	}
 
@@ -53,28 +51,28 @@ func main() {
 	fmt.Printf("Threshold: %.2f\n", *threshold)
 	fmt.Printf("Output file: %s\n", *outputFile)
 
-	fileType, err := goten.DetectFileType(*inputFile)
+	fileType, err := DetectFileType(*inputFile)
 	if err != nil {
 		log.Fatalf("Failed to detect file type: %v", err)
 	}
 
-	var results []*goten.VADResult
+	var results []*VADResult
 
 	if fileType == "wav" {
 		fmt.Printf("Detected WAV file\n")
-		results, err = goten.ProcessWAVFile(*inputFile, *hopSize, float32(*threshold))
+		results, err = ProcessWAVFile(*inputFile, *hopSize, float32(*threshold))
 		if err != nil {
 			log.Fatalf("Failed to process WAV file: %v", err)
 		}
 	} else {
 		fmt.Printf("Detected PCM file (sample rate=16000Hz, mono, 16-bit, little-endian)\n")
-		config := goten.PCMConfig{
+		config := PCMConfig{
 			SampleRate:    16000,
 			NumChannels:   1,
 			BitsPerSample: 16,
 			ByteOrder:     binary.LittleEndian,
 		}
-		results, err = goten.ProcessPCMFile(*inputFile, config, *hopSize, float32(*threshold))
+		results, err = ProcessPCMFile(*inputFile, config, *hopSize, float32(*threshold))
 		if err != nil {
 			log.Fatalf("Failed to process PCM file: %v", err)
 		}

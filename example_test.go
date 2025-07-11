@@ -1,4 +1,4 @@
-package goten
+package main
 
 import (
 	"encoding/binary"
@@ -173,7 +173,7 @@ func TestPCMFileProcessing(t *testing.T) {
 
 func TestFileTypeDetection(t *testing.T) {
 	// Test WAV file detection
-	wavFile := "../testset/testset-audio-01.wav"
+	wavFile := "testset/testset-audio-01.wav"
 	if _, err := os.Stat(wavFile); err == nil {
 		fileType, err := DetectFileType(wavFile)
 		if err != nil {

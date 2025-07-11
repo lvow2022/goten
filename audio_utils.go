@@ -1,4 +1,4 @@
-package goten
+package main
 
 import (
 	"encoding/binary"
@@ -133,9 +133,11 @@ func ProcessWAVFile(filename string, hopSize int, threshold float32) ([]*VADResu
 	}
 	defer vad.Close()
 
+	// Calculate frame count
 	frameCount := len(audioData) / hopSize
 	results := make([]*VADResult, frameCount)
 
+	// Process each frame
 	for i := 0; i < frameCount; i++ {
 		start := i * hopSize
 		end := start + hopSize
@@ -217,6 +219,7 @@ func ReadPCMFile(filename string, config PCMConfig) ([]int16, error) {
 		return nil, fmt.Errorf("only 16kHz audio is supported, got %d Hz", config.SampleRate)
 	}
 
+	// Read all audio data
 	audioBytes, err := io.ReadAll(file)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read audio data: %v", err)
@@ -251,9 +254,11 @@ func ProcessPCMFile(filename string, config PCMConfig, hopSize int, threshold fl
 	}
 	defer vad.Close()
 
+	// Calculate frame count
 	frameCount := len(audioData) / hopSize
 	results := make([]*VADResult, frameCount)
 
+	// Process each frame
 	for i := 0; i < frameCount; i++ {
 		start := i * hopSize
 		end := start + hopSize
@@ -289,6 +294,7 @@ func DetectFileType(filename string) (string, error) {
 	}
 	defer file.Close()
 
+	// Get file size
 	fileInfo, err := file.Stat()
 	if err != nil {
 		return "", fmt.Errorf("failed to get file info: %v", err)
