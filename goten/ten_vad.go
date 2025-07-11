@@ -1,14 +1,14 @@
 package goten
 
 /*
-#cgo CFLAGS: -I../include
-#cgo linux LDFLAGS: -L../lib/Linux/x64 -lten_vad
-#cgo windows,amd64 LDFLAGS: -L../lib/Windows/x64 -lten_vad
-#cgo windows,386 LDFLAGS: -L../lib/Windows/x86 -lten_vad
-#cgo darwin LDFLAGS: -F/Users/luowei/workspace/ten-vad/lib/macOS -framework ten_vad
-#cgo android,arm LDFLAGS: -L../lib/Android/armeabi-v7a -lten_vad
-#cgo android,arm64 LDFLAGS: -L../lib/Android/arm64-v8a -lten_vad
-#cgo ios LDFLAGS: -L../lib/iOS -F../lib/iOS -framework ten_vad
+#cgo CFLAGS: -I./include
+#cgo linux LDFLAGS: -L./lib/Linux/x64 -lten_vad
+#cgo windows,amd64 LDFLAGS: -L./lib/Windows/x64 -lten_vad
+#cgo windows,386 LDFLAGS: -L./lib/Windows/x86 -lten_vad
+#cgo darwin LDFLAGS: -F./lib/macOS -framework ten_vad
+#cgo android,arm LDFLAGS: -L./lib/Android/armeabi-v7a -lten_vad
+#cgo android,arm64 LDFLAGS: -L./lib/Android/arm64-v8a -lten_vad
+#cgo ios LDFLAGS: -L./lib/iOS -F./lib/iOS -framework ten_vad
 
 #include "ten_vad.h"
 #include <stdlib.h>
