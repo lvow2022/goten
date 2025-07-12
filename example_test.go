@@ -1,4 +1,4 @@
-package main
+package goten
 
 import (
 	"encoding/binary"
