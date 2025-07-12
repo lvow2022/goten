@@ -22,6 +22,34 @@ ten-vad/
 
 ## 安装
 
+### 1. 安装动态库文件
+
+在使用此库之前，需要将动态库文件安装到系统目录：
+
+#### Linux 系统
+```bash
+# 复制动态库到系统目录
+sudo cp vad/lib/Linux/x64/libten_vad.so /usr/lib/
+sudo chmod 755 /usr/lib/libten_vad.so
+
+# 更新动态库缓存
+sudo ldconfig
+```
+
+#### macOS 系统
+```bash
+# 复制框架到系统目录
+sudo cp -R vad/lib/macOS/ten_vad.framework /Library/Frameworks/
+```
+
+#### Windows 系统
+```bash
+# 复制动态库到系统目录（需要管理员权限）
+copy vad\lib\Windows\x64\ten_vad.dll C:\Windows\System32\
+```
+
+### 2. 安装 Go 库
+
 将项目作为 Go module 引入：
 
 ```bash
