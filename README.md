@@ -101,37 +101,10 @@ go build -o vad-demo cmd/vad_demo.go
 
 ## Makefile 使用说明
 
-本项目提供了简单的 Makefile，方便常用操作：
-
-```makefile
-# 构建命令行工具
-make build
-
-# 运行测试
-make test
-
-# 清理构建产物
-make clean
-```
-
-### 主要目标
-
 - `make build`  构建命令行工具（等价于执行 `./build.sh`），生成 `build/vad_demo` 可执行文件。
 - `make test`   运行所有 Go 单元测试（等价于执行 `./run_test.sh`）。
 - `make clean`  清理构建产物（删除 `build/` 目录和测试二进制文件）。
 
-### 示例
-
-```bash
-# 构建
-make build
-
-# 运行测试
-make test
-
-# 清理
-make clean
-```
 
 ## API 说明
 
