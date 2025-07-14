@@ -5,7 +5,7 @@ package vad
 #cgo linux LDFLAGS: -L${SRCDIR}/lib/Linux/x64 -lten_vad
 #cgo windows,amd64 LDFLAGS: -L${SRCDIR}/lib/Windows/x64 -lten_vad
 #cgo windows,386 LDFLAGS: -L${SRCDIR}/lib/Windows/x86 -lten_vad
-#cgo darwin LDFLAGS: -F${SRCDIR}/lib/macOS -framework ten_vad -Wl,-rpath,${SRCDIR}/lib/macOS
+#cgo darwin LDFLAGS: -F/Library/Frameworks -framework ten_vad
 #cgo android,arm LDFLAGS: -L${SRCDIR}/lib/Android/armeabi-v7a -lten_vad
 #cgo android,arm64 LDFLAGS: -L${SRCDIR}/lib/Android/arm64-v8a -lten_vad
 #cgo ios LDFLAGS: -L${SRCDIR}/lib/iOS -F${SRCDIR}/lib/iOS -framework ten_vad
