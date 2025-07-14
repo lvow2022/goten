@@ -99,6 +99,40 @@ go build -o vad-demo cmd/vad_demo.go
 ./build/vad_demo -version
 ```
 
+## Makefile 使用说明
+
+本项目提供了简单的 Makefile，方便常用操作：
+
+```makefile
+# 构建命令行工具
+make build
+
+# 运行测试
+make test
+
+# 清理构建产物
+make clean
+```
+
+### 主要目标
+
+- `make build`  构建命令行工具（等价于执行 `./build.sh`），生成 `build/vad_demo` 可执行文件。
+- `make test`   运行所有 Go 单元测试（等价于执行 `./run_test.sh`）。
+- `make clean`  清理构建产物（删除 `build/` 目录和测试二进制文件）。
+
+### 示例
+
+```bash
+# 构建
+make build
+
+# 运行测试
+make test
+
+# 清理
+make clean
+```
+
 ## API 说明
 
 ### 核心 API
@@ -107,10 +141,10 @@ go build -o vad-demo cmd/vad_demo.go
 - `vad.(*VAD).Process(audioData []int16) (*vad.Result, error)` 处理一帧音频
 - `vad.(*VAD).Close() error` 关闭 VAD 实例
 
-### 批量处理 API
+### 文件处理 API
 
-- `vad.ProcessWAVFrames(filename string, hopSize int, threshold float32) ([]*vad.Result, error)` 批量处理 WAV 文件
-- `vad.ProcessPCMFrames(filename string, config vad.PCMConfig, hopSize int, threshold float32) ([]*vad.Result, error)` 批量处理 PCM 文件
+- `vad.ProcessWAVFrames(filename string, hopSize int, threshold float32) ([]*vad.Result, error)` 处理 WAV 文件并返回所有帧的预测结果
+- `vad.ProcessPCMFrames(filename string, config vad.PCMConfig, hopSize int, threshold float32) ([]*vad.Result, error)` 处理 PCM 文件并返回所有帧的预测结果
 
 ### 音频处理 API
 
